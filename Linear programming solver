@@ -32,7 +32,7 @@ entry_restrictions.place(x=220, y=39)
 was_used = False
 
 def apply():
-    global was_used, a, c, b, restrictions_amount, restrictions_text, restrictions_type, restrictions_type_menu, restrictions_labels, variables_amount, variables_text, variables_labels,variables_type, variables_type_menu, variables_type_menu, function_text, function_labels, function_type, function_type_menu, solve_button, x_position, y_position
+    global was_used, a_widgets, c_widgets, b_widgets, restrictions_amount, restrictions_text, restrictions_type, restrictions_type_menu, restrictions_labels, variables_amount, variables_text, variables_labels,variables_type, variables_type_menu, variables_type_menu, function_text, function_labels, function_type, function_type_menu, solve_button, x_position, y_position
 
     #input check
     if entry_variables.get().isdigit() and entry_restrictions.get().isdigit():
@@ -40,7 +40,7 @@ def apply():
         #clearing labels, buttons and entries
         if was_used:
             function_text.destroy()
-            for entry in c:
+            for entry in c_widgets:
                 entry.destroy()
             for label in function_labels:
                 label.destroy()
@@ -49,13 +49,13 @@ def apply():
             restrictions_text.destroy()
             for optionmenu in restrictions_type_menu:
                 optionmenu.destroy()
-            for line in a:
+            for line in a_widgets:
                 for value in line:
                     value.destroy()
             for line in restrictions_labels:
                 for label in line:
                     label.destroy()
-            for entry in b:
+            for entry in b_widgets:
                 entry.destroy()
 
             variables_text.destroy()
@@ -69,18 +69,18 @@ def apply():
         variables_amount = int(entry_variables.get())
         restrictions_amount = int(entry_restrictions.get())
         
-        c = [0]*variables_amount
+        c_widgets = [0]*variables_amount
         function_labels = [0]*variables_amount
 
-        a = []
+        a_widgets = []
         for i in range(restrictions_amount):
-            a.append([0]*(variables_amount))
+            a_widgets.append([0]*(variables_amount))
         restrictions_labels = []
         for i in range(restrictions_amount):
             restrictions_labels.append([0]*(variables_amount))
         restrictions_type = [0]*restrictions_amount
         restrictions_type_menu = [0]*restrictions_amount
-        b = [0]*restrictions_amount
+        b_widgets = [0]*restrictions_amount
 
         variables_labels = [0]*variables_amount
         variables_type_menu = [0]*variables_amount
@@ -91,8 +91,8 @@ def apply():
         function_text.place(x=10, y=85)
         x_position = 20
         for i in range(variables_amount):
-            c[i] = tk.Entry(root, width=5)
-            c[i].place(x=x_position, y=115)
+            c_widgets[i] = tk.Entry(root, width=5)
+            c_widgets[i].place(x=x_position, y=115)
             if i==variables_amount-1:
                 function_labels[i] = tk.Label(root, text=f'x{i+1}')
                 function_labels[i].place(x=x_position+37, y=115)
@@ -113,8 +113,8 @@ def apply():
             y_position += 40
             x_position = 20
             for j in range(variables_amount):
-                a[i][j] = tk.Entry(root, width=5)
-                a[i][j].place(x=x_position, y=y_position)
+                a_widgets[i][j] = tk.Entry(root, width=5)
+                a_widgets[i][j].place(x=x_position, y=y_position)
                 if j==variables_amount-1:
                     restrictions_labels[i][j] = tk.Label(root, text=f'x{j+1}')
                     restrictions_labels[i][j].place(x=x_position+37, y=y_position)
@@ -129,8 +129,8 @@ def apply():
             restrictions_type_menu[i].place(x=x_position, y=y_position)
             x_position += 70
             y_position += 7
-            b[i] = tk.Entry(root, width=5)
-            b[i].place(x=x_position, y=y_position)
+            b_widgets[i] = tk.Entry(root, width=5)
+            b_widgets[i].place(x=x_position, y=y_position)
 
         #widgets for variables
         variables_text = tk.Label(root, text='Variables:', font=('', 13))
@@ -179,26 +179,29 @@ def is_optimal(table):
     return True
 
 def simplex():
-    global a, b, c, restrictions_type, variables_type, function_type, base, tableau, y_position
+    global a, b, c, c_widgets, restrictions_type, variables_type, function_type, base, tableau, y_position
 
     #creating base
     base = [0]*(restrictions_amount)
 
     #getting values
+    a = []
+    for i in range(restrictions_amount):
+        a.append([0]*(variables_amount))
     a = np.array(a)
     for i in range(restrictions_amount):
         for j in range(variables_amount):
-            x = fr.Fraction(a[i][j].get())
+            x = fr.Fraction(a_widgets[i][j].get())
             a[i][j] = x
 
-    b = np.array(b)
+    b = np.array([0]*restrictions_amount)
     for i in range(restrictions_amount):
-        x = fr.Fraction(b[i].get())
+        x = fr.Fraction(b_widgets[i].get())
         b[i] = x
     
-    c = np.array(c)
+    c = np.array([0]*(variables_amount))
     for i in range(variables_amount):
-        x = fr.Fraction(c[i].get())
+        x = fr.Fraction(c_widgets[i].get())
         c[i] = x
     
     #changing from maximization to minimization
@@ -238,9 +241,9 @@ def simplex():
     tableau = np.append([[0]*len(tableau[0])], tableau, axis=0)
 
     #making sure that right side vector is non-negative for first phase of dual-simplex
-    #for i in range(restrictions_amount):
-        #if tableau[i+1][0]<0:
-            #tableau[i+1] = np.negative(tableau[i+1])
+    for i in range(restrictions_amount):
+        if tableau[i+1][0]<0:
+            tableau[i+1] = np.negative(tableau[i+1])
 
     #creating auxiliary variables
     for i in range(restrictions_amount):
